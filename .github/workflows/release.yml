@@ -1,0 +1,44 @@
+# Publishes to npm when a tag v<version> is pushed (e.g. `npm version minor && git push --follow-tags`).
+#
+# Authentication: npm trusted publishing (OIDC) – no token stored in GitHub. Configure it once on
+# npmjs.com → package "helprange" → Settings → Trusted publishing → GitHub Actions:
+#   organization/user: HelpRange, repository: helprange-js, workflow filename: release.yml, environment: npm
+# npm only lets you configure that after the package exists, so the very first version is published by hand
+# (see PUBLISHING.md). --provenance adds a signed build attestation that links the package to this workflow run.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # OIDC for trusted publishing and provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Trusted publishing needs npm 11.5.1 or newer
+        run: npm install -g npm@^11.5.1
+      - name: Tag matches package.json
+        run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Skip versions that are already on npm (0.1.0 is published by hand)
+        id: check
+        run: |
+          if npm view "helprange@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.check.outputs.published != 'true'
+        run: npm publish --provenance --access public
