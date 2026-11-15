@@ -340,6 +340,18 @@ export interface RoomGuest {
   link: string;
 }
 
+/** A guest of the room with views, last visit and NDA status (nda and nda_signed_at only when the room asks for an NDA). */
+export interface DataRoomGuestDetail {
+  id: number;
+  email: string;
+  /** The guest's own invitation link (what the invitation e-mail carries). */
+  link: string;
+  views: number;
+  last_view_at: string | null;
+  nda?: "signed" | "signed an older version" | "not signed";
+  nda_signed_at?: string | null;
+}
+
 export interface WebhookEndpoint {
   id: number;
   url: string;
@@ -701,14 +713,16 @@ export interface ListLinksQuery {
   document_id?: number;
   /** Only links of documents in this folder. */
   folder_id?: number;
-  /** Only links of this data room (data_room_id is accepted too). */
+  /** Only links of this data room. */
+  data_room_id?: number;
+  /** Deprecated alias of data_room_id (still accepted; data_room_id wins when both are sent). */
   room_id?: number;
   /** Label contains this text (case-insensitive); "default" = the documents' default links. */
   label?: string;
   /** Created on or after: YYYY-MM-DD (UTC) or an ISO 8601 date-time. */
-  created_after?: string;
+  created_after?: unknown | unknown;
   /** Created on or before: YYYY-MM-DD (the whole day, UTC) or an ISO 8601 date-time. */
-  created_before?: string;
+  created_before?: unknown | unknown;
   /** active, expired (past its expiry date or views limit used up) or disabled (turned off in the panel). Missing or all: every link. */
   status?: "active" | "expired" | "disabled" | "all";
   /** Page number, 1 or more (default 1). next_page in the response is the next one, or null. */
@@ -1097,17 +1111,6 @@ export interface CreateDataRoomBody {
   settings?: CreateDataRoomBodySettings;
 }
 
-export interface CreateDataRoomResponseGuest {
-  id: number;
-  email: string;
-  /** The guest's own invitation link. */
-  link: string;
-  views: number;
-  last_view_at: string | null;
-  nda?: "signed" | "signed an older version" | "not signed";
-  nda_signed_at?: string | null;
-}
-
 export interface CreateDataRoomResponseDocument {
   id: number;
   name: string;
@@ -1159,7 +1162,7 @@ export interface CreateDataRoomResponse {
   /** The room's folders in order (empty while folders are off). */
   folders: Array<ListFoldersResponseFolder>;
   approval_workflow: boolean;
-  guests: Array<CreateDataRoomResponseGuest>;
+  guests: Array<DataRoomGuestDetail>;
   pending_access_requests: number;
   documents: Array<CreateDataRoomResponseDocument>;
   expires_at: string | null;
@@ -1827,14 +1830,21 @@ export interface SendWebhookTestEventResponse {
 export interface ListWebhookDeliveriesQuery {
   /** Only this status. */
   status?: "pending" | "delivered" | "failed";
-  /** 1–100 (default 100). */
+  /** Items per page, 1–100 (default 100). */
   limit?: number;
+  /** Page number, 1 or more (default 1). next_page in the response is the next one, or null. */
+  page?: number;
 }
 
 export interface ListWebhookDeliveriesResponse {
   webhook_endpoint_id: number;
   retention_days: number;
   deliveries: Array<WebhookDelivery>;
+  page: number;
+  limit: number;
+  /** Deliveries matching the filter. */
+  total: number;
+  next_page: number | null;
   /** false for test-mode (hr_test_) keys, true for live keys. */
   livemode?: boolean;
 }

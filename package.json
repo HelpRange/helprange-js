@@ -1,6 +1,6 @@
 {
   "name": "helprange",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official HelpRange API client for Node.js and TypeScript: upload documents, create tracked share links, run data rooms, e-signature, offers and analytics.",
   "license": "MIT",
   "author": "HelpRange <hello@helprange.com> (https://www.helprange.com)",

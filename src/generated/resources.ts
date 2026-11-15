@@ -38,7 +38,7 @@ export class DataRoomsGuests {
   /**
    * Remove a guest.
    *
-   * Takes a guest out of this room (by email or guest_id); they keep access to other rooms they are in. 409 when the room is frozen.
+   * Takes a guest out of this room (by email or guest_id); they keep access to other rooms they are in. 409 when the room is frozen. Send email or guest_id – an empty body is a 400.
    *
    * `POST /api/v2/data-rooms/{data_room_id}/guests/remove` – scope `rooms:write`
    * Sent with an Idempotency-Key, so retries are safe (set your own with `options.idempotencyKey`).
@@ -256,7 +256,7 @@ export class DataRoomsDocuments {
   /**
    * Remove documents from a data room.
    *
-   * Like "Remove" on the room page: the documents leave the room (guests no longer see them); the files stay in their folders. Ids not in the room are listed in not_in_room. 409 when the room is frozen.
+   * Like "Remove" on the room page: the documents leave the room (guests no longer see them); the files stay in their folders. Ids not in the room are listed in not_in_room. 409 when the room is frozen. Send document_ids and / or room_link_ids – an empty body is a 400.
    *
    * `POST /api/v2/data-rooms/{data_room_id}/documents/remove` – scope `rooms:write`
    * Sent with an Idempotency-Key, so retries are safe (set your own with `options.idempotencyKey`).
